@@ -2,9 +2,9 @@
 __pycache__/
 *.py[cod]
 *$py.class
-
+*.npy
 *.wav
-
+*.csv
 # C extensions
 *.so
 
