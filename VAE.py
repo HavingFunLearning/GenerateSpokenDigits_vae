@@ -140,14 +140,14 @@ class VAE:
                            metrics=[],
                                     )
     
-    def train(self, x_train, batch_size, num_epochs):
+    def train(self, x_train, x_test, batch_size, num_epochs):
         # Check input shape
         print("Input shape of x_train:", x_train.shape)
         # Compile the model
         self.compile()
         # Train the model
         print("Training the model...")
-        history = self.model.fit(x_train, x_train, epochs=num_epochs, batch_size=batch_size, verbose=1)
+        history = self.model.fit(x_train, x_train, validation_data = (x_test,x_test),epochs=num_epochs, batch_size=batch_size, verbose=1)
         print("Training completed.")
 
 
