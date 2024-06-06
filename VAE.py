@@ -62,16 +62,21 @@ class VAE:
         - the output is the sample from the posterior distro on the latent space
         '''
         encoder_input = Input(shape=self.input_shape, name='encoder_input')
+    
+        # Add convolutional layers
+        ##  Strides (2, 2) divides by half the resolution
+        ## Strides (2,1) divide by half only the first component
+        x = Conv2D(512, 3, activation='relu',padding='same',strides=(2, 2))(encoder_input)
+        x = Conv2D(256, 3, padding='same', activation='relu', strides=(2, 2))(x)
+        x = Conv2D(128, 3, padding='same', activation='relu', strides=(2, 2))(x)
+        x = Conv2D(64, 3, padding='same', activation='relu', strides=(2, 2))(x)
+        x = Conv2D(32, 3, padding='same', activation='relu', strides=(2, 1))(x)
         
-        x = Conv2D(32, 3, padding='same', activation='relu')(encoder_input)
-        x = Conv2D(64, 3, padding='same', activation='relu',strides=(2, 2))(x)
-        x = Conv2D(64, 3, padding='same', activation='relu')(x)
-        x = Conv2D(64, 3, padding='same', activation='relu')(x)
-        
-        self.conv_shape = int_shape(x) #Shape of conv to be provided to decoder
-
+        self.conv_shape = K.int_shape(x) # Shape of conv to be provided to decoder
+        print("here")
         x = Flatten()(x)
         x = Dense(32, activation='relu')(x)
+    
         
         # Distro Parameters
         mu = Dense(self.latent_dim, name='latent_mu')(x)   #Mean values of encoded input
@@ -97,20 +102,22 @@ class VAE:
    ########################################################################################
 
 
-    def _build_decoder(self):
-        decoder_input = Input(shape=(self.latent_dim, ), name="decoder_input")
-        
-        # This is to create a shape that can be reverted to the original size of the image
-        x = Dense(self.conv_shape[1]*self.conv_shape[2]*self.conv_shape[3], activation='relu')(decoder_input) # this is a vector
-        x = Reshape((self.conv_shape[1], self.conv_shape[2],self.conv_shape[3]))(x) # this is a matrix
-        
-        x = Conv2DTranspose(64, 3, padding='same', activation='relu',strides=(2, 2))(x)
-        x = Conv2DTranspose(32, 3, padding='same', activation='relu')(x)
+    def _build_decoder(self):        
+        decoder_input = Input(shape=(self.latent_dim,), name="decoder_input")
 
-        x = Conv2DTranspose(1, 3, padding='same', activation='sigmoid', name='decoder_output')(x)
+        x = Dense(np.prod(self.conv_shape[1:]), activation='relu')(decoder_input)
+        x = Reshape((self.conv_shape[1], self.conv_shape[2], self.conv_shape[3]))(x)
+
+        x = Conv2DTranspose(32, 3, padding='same', activation='relu', strides=(2, 1))(x)
+        x = Conv2DTranspose(64, 3, padding='same', activation='relu', strides=(2, 2))(x)
+        x = Conv2DTranspose(128, 3, padding='same', activation='relu', strides=(2, 2))(x)
+        x = Conv2DTranspose(256, 3, padding='same', activation='relu', strides=(2, 2))(x)
+
+        x = Conv2DTranspose(32, 3, padding='same', activation='relu', strides=(2, 2))(x)
+        x = Conv2DTranspose(1, 3, padding='same', activation='sigmoid')(x)
+
         dec_out = x
         self.decoder = Model(decoder_input, dec_out, name='decoder')
-        
         
         
     def _build(self):
