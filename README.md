@@ -5,3 +5,5 @@
 - I trained for about 50 epochs.
 - Still some problems:
   - Transforming back
+  - The sound is really bad! probably due to the normalization!
+  - Overall this is my first approach to VAE and sound data so for now i'm quite satisfied!
